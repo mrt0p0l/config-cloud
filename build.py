@@ -71,6 +71,26 @@ def cc_to_flag(cc):
     return chr(0x1F1E6 + ord(cc[0].upper()) - 65) + chr(0x1F1E6 + ord(cc[1].upper()) - 65)
 
 
+COUNTRY_NAMES = {
+    "DE": "آلمان", "NL": "هلند", "US": "آمریکا", "GB": "انگلیس", "FR": "فرانسه",
+    "FI": "فنلاند", "SE": "سوئد", "CA": "کانادا", "JP": "ژاپن", "SG": "سنگاپور",
+    "TR": "ترکیه", "RU": "روسیه", "AE": "امارات", "IN": "هند", "IR": "ایران",
+    "PL": "لهستان", "AT": "اتریش", "CH": "سوئیس", "IT": "ایتالیا", "ES": "اسپانیا",
+    "RO": "رومانی", "UA": "اوکراین", "LT": "لیتوانی", "LV": "لتونی", "HK": "هنگ‌کنگ",
+    "KR": "کره", "AU": "استرالیا", "BR": "برزیل", "CZ": "چک", "DK": "دانمارک",
+    "NO": "نروژ", "IE": "ایرلند", "BE": "بلژیک", "HU": "مجارستان", "BG": "بلغارستان",
+    "MD": "مولداوی", "RS": "صربستان", "LU": "لوکزامبورگ", "CY": "قبرس", "EE": "استونی",
+    "KZ": "قزاقستان", "AM": "ارمنستان", "GE": "گرجستان", "VN": "ویتنام", "MY": "مالزی",
+    "ID": "اندونزی", "TH": "تایلند", "ZA": "آفریقای‌جنوبی", "MX": "مکزیک", "PT": "پرتغال",
+    "GR": "یونان", "SK": "اسلواکی", "SI": "اسلوونی", "HR": "کرواسی", "IS": "ایسلند",
+    "SA": "عربستان", "CW": "کوراسائو", "PA": "پاناما", "XX": "نامشخص",
+}
+
+
+def cc_name(cc):
+    return COUNTRY_NAMES.get((cc or "").upper(), cc or "؟")
+
+
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept-Encoding": "gzip"})
     try:
@@ -420,12 +440,51 @@ def main():
             f.write(base64.b64encode("\n".join(entries).encode()).decode())
         idx.append((code, len(entries)))
     idx.sort(key=lambda x: -x[1])
+    repo = _os.environ.get("GITHUB_REPOSITORY", "USER/REPO")
+    raw = f"https://raw.githubusercontent.com/{repo}/main"
     with open("countries/INDEX.md", "w", encoding="utf-8") as f:
         f.write("# ساب‌های کشوری — هرکدام فقط یک کشور\n\n")
         f.write("لینکِ خامِ هر کشوری را که می‌خواهی، جدا به‌عنوان یک subscription اضافه کن:\n\n")
         for code, n in idx:
-            f.write(f"- {cc_to_flag(code)} **{code}** — {n} کانفیگ → `countries/{code}.txt`\n")
-    print(f"ساب‌های کشوری: {len(idx)} کشور")
+            f.write(f"- {cc_to_flag(code)} **{cc_name(code)}** ({code}) — {n} کانفیگ → "
+                    f"`{raw}/countries/{code}.txt`\n")
+
+    # ── داشبورد (GitHub Pages) — ایده ۱۷ ──
+    rows = "".join(
+        f"<tr><td>{cc_to_flag(c)} {cc_name(c)} <small>({c})</small></td><td>{n}</td>"
+        f"<td><code onclick=\"navigator.clipboard.writeText('{raw}/countries/{c}.txt')\" "
+        f"title='کلیک=کپی'>{raw}/countries/{c}.txt</code></td></tr>"
+        for c, n in idx)
+    total = sum(n for _c, n in idx)
+    updated = _t.strftime("%Y-%m-%d %H:%M UTC", _t.gmtime())
+    html = f"""<!doctype html><html lang=fa dir=rtl><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>config-cloud</title>
+<style>body{{font-family:Vazirmatn,Tahoma,sans-serif;max-width:820px;margin:24px auto;padding:0 14px;
+background:#0b0e14;color:#e6e6e6}}h1{{font-size:1.4rem}}.s{{color:#9aa}}
+table{{width:100%;border-collapse:collapse;margin-top:14px}}
+td,th{{border-bottom:1px solid #222;padding:8px;text-align:right}}
+code{{background:#161b26;color:#8ad;padding:3px 6px;border-radius:6px;cursor:pointer;
+font-size:.8rem;word-break:break-all}}</style></head><body>
+<h1>🌍 config-cloud</h1>
+<p class=s>مجموع: <b>{total}</b> کانفیگ در <b>{len(idx)}</b> کشور · آخرین آپدیت: {updated}</p>
+<p class=s>لینکِ کلی (همه): <code onclick="navigator.clipboard.writeText('{raw}/sub.txt')">{raw}/sub.txt</code></p>
+<p class=s>روی هر لینک کلیک کنی، کپی می‌شود. هر کشور را جدا در کلاینتت اضافه کن.</p>
+<table><tr><th>کشور</th><th>تعداد</th><th>لینکِ ساب</th></tr>{rows}</table>
+</body></html>"""
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+
+    # ── یک لینکِ واحد: «بهترین کانفیگِ هر کشور» (یکجا اضافه کن) ──
+    best_entries = []
+    for code, _n in idx:
+        if code == "XX":
+            continue                      # نامشخص را در «هر کشور» نمی‌آوریم
+        host, o, link = by_cc_items[code][0]   # رتبه‌ی اولِ آن کشور
+        best_entries.append(link.split("#", 1)[0] + "#" +
+                            urllib.parse.quote(f"{cc_to_flag(code)} {cc_name(code)}"))
+    with open("best.txt", "w", encoding="utf-8") as f:
+        f.write(base64.b64encode("\n".join(best_entries).encode()).decode())
+    print(f"ساب‌های کشوری: {len(idx)} کشور | best.txt: {len(best_entries)} کشور | داشبورد: index.html")
 
     # پاکسازیِ حافظه: مرده‌های مزمن + کهنه‌ها (#10/#19)؛ اگر دوباره دیده شوند، seen تازه است
     cutoff = now - STALE_HOURS * 3600
