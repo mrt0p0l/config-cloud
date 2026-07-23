@@ -404,6 +404,29 @@ def main():
     with open("sub.txt", "w", encoding="utf-8") as f:
         f.write(base64.b64encode(sub_text.encode()).decode())
 
+    # ── ساب جدا برای هر کشور (IPت در یک کشور ثابت می‌ماند) — ایده‌ی خودت ──
+    import os as _os, shutil as _sh
+    if _os.path.isdir("countries"):
+        _sh.rmtree("countries")            # کشورهای کهنه پاک شوند
+    _os.makedirs("countries", exist_ok=True)
+    idx = []
+    for code, lst in by_cc_items.items():
+        flag = cc_to_flag(code)
+        entries = [l.split("#", 1)[0] + "#" + urllib.parse.quote(f"{flag} {code} | {o['type']}")
+                   for _h, o, l in lst]
+        if not entries:
+            continue
+        with open(f"countries/{code}.txt", "w", encoding="utf-8") as f:
+            f.write(base64.b64encode("\n".join(entries).encode()).decode())
+        idx.append((code, len(entries)))
+    idx.sort(key=lambda x: -x[1])
+    with open("countries/INDEX.md", "w", encoding="utf-8") as f:
+        f.write("# ساب‌های کشوری — هرکدام فقط یک کشور\n\n")
+        f.write("لینکِ خامِ هر کشوری را که می‌خواهی، جدا به‌عنوان یک subscription اضافه کن:\n\n")
+        for code, n in idx:
+            f.write(f"- {cc_to_flag(code)} **{code}** — {n} کانفیگ → `countries/{code}.txt`\n")
+    print(f"ساب‌های کشوری: {len(idx)} کشور")
+
     # پاکسازیِ حافظه: مرده‌های مزمن + کهنه‌ها (#10/#19)؛ اگر دوباره دیده شوند، seen تازه است
     cutoff = now - STALE_HOURS * 3600
     for l in list(state.keys()):
