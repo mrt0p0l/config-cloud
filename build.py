@@ -299,6 +299,11 @@ def main():
         if not conv:
             continue
         host, ob = conv
+        if not ob.get("server") or not ob.get("server_port"):
+            continue
+        _tls = ob.get("tls") or {}
+        if _tls.get("reality") and not _tls["reality"].get("public_key"):
+            continue   # reality بدون public_key کار نمی‌کند
         ident = (ob["type"], ob["server"], ob["server_port"],
                  ob.get("uuid") or ob.get("password") or "")
         if ident in seen_id:
@@ -351,6 +356,7 @@ def main():
 
     # ساخت outboundها: top-N per کشور
     seen_tags = set(); by_country = {}; all_tags = []; outbounds = []
+    sub_entries = []   # برای sub.txt (v2rayN / v2rayNG / موبایل) با اسمِ پرچم‌دار
     for code, lst in by_cc_items.items():
         for host, ob, link in lst[:TOP_PER_COUNTRY]:
             flag = cc_to_flag(code)
@@ -362,15 +368,19 @@ def main():
             ob = dict(ob); ob["tag"] = tag
             outbounds.append(ob); all_tags.append(tag)
             by_country.setdefault(code, []).append(tag)
+            # همان لینکِ اصلی، ولی با اسمِ پرچم‌دارِ کشوری (برای هر کلاینتی)
+            sub_entries.append(link.split("#", 1)[0] + "#" + urllib.parse.quote(f"{flag} {code} | {ob['type']}"))
 
     # گروهِ urltest per کشور (failoverِ سریع) + گروهِ کلی + انتخابگر
     country_groups = []
     for code in sorted(by_country, key=lambda c: -len(by_country[c])):
         gtag = f"{cc_to_flag(code)} {code} (بهترین)"
         country_groups.append(gtag)
+        # چسبنده: IP توی همان کشور ثابت می‌ماند و فقط وقتی واقعاً افتاد عوض می‌شود
+        # (interval بلند = ثابت؛ ولی failover روی خرابیِ واقعی همچنان سریع است)
         outbounds.append({"type": "urltest", "tag": gtag, "outbounds": by_country[code],
                           "url": "https://www.gstatic.com/generate_204",
-                          "interval": "90s", "tolerance": 60, "idle_timeout": "5m"})
+                          "interval": "10m", "tolerance": 200, "idle_timeout": "30m"})
     outbounds.append({"type": "urltest", "tag": "⚡ خودکار (همه)", "outbounds": all_tags,
                       "url": "https://www.gstatic.com/generate_204", "interval": "90s", "tolerance": 60})
     selector = {"type": "selector", "tag": "🌍 انتخاب",
@@ -389,10 +399,10 @@ def main():
     with open("singbox.json", "w", encoding="utf-8") as f:
         json.dump(config, f, ensure_ascii=False, indent=1)
 
-    # ساب معمولی (فقط کانفیگ‌های زنده‌ی انتخاب‌شده)
-    sub_links = sorted(alive_links) or sorted(all_links)[:400]
+    # ساب معمولی با اسم‌های پرچم‌دار (v2rayN / v2rayNG / نکوباکس / موبایل)
+    sub_text = "\n".join(sub_entries) if sub_entries else "\n".join(sorted(all_links)[:400])
     with open("sub.txt", "w", encoding="utf-8") as f:
-        f.write(base64.b64encode("\n".join(sub_links).encode()).decode())
+        f.write(base64.b64encode(sub_text.encode()).decode())
 
     # پاکسازیِ حافظه: مرده‌های مزمن + کهنه‌ها (#10/#19)؛ اگر دوباره دیده شوند، seen تازه است
     cutoff = now - STALE_HOURS * 3600
