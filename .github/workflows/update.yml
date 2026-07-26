@@ -2,8 +2,8 @@ name: build-configs
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
-  workflow_dispatch:
+    - cron: "*/30 * * * *"   # هر ۳۰ دقیقه (کارِ سنگین روی سرورِ گیت‌هاب، نه دیتای تو)
+  workflow_dispatch:          # اجرای دستی از تبِ Actions
 
 permissions:
   contents: write
@@ -17,15 +17,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # sing-box برای «تستِ واقعی» لازم است — واقعاً از داخلِ هر کانفیگ درخواست می‌زنیم
+      - name: Install sing-box
+        run: |
+          set -e
+          VER=1.13.14
+          curl -sL -o sb.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${VER}/sing-box-${VER}-linux-amd64.tar.gz"
+          tar xzf sb.tar.gz
+          sudo install -m755 "sing-box-${VER}-linux-amd64/sing-box" /usr/local/bin/sing-box
+          sing-box version
+
       - name: Build grouped configs
+        timeout-minutes: 45
         run: python build.py
+
       - name: Commit results
         run: |
           git config user.name  "config-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add -A
+          git add -A singbox.json sub.txt game.txt stream.txt udp.txt state.json countries index.html
           git commit -m "update configs" || echo "no changes"
           git push
