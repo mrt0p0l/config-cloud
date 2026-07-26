@@ -395,8 +395,10 @@ SB_BIN = os.environ.get("SINGBOX_BIN", "sing-box")   # در CI نصب می‌ش�
 REAL_TEST = os.environ.get("REAL_TEST", "1") != "0"
 # سقفِ تستِ واقعی — گلوگاهِ اصلی بود: از ۲۶۵۱ زنده فقط ۷۰۰ تست می‌شد و ۱۳۶ تأیید.
 # رانرِ گیت‌هاب کلِ کار را در ~۳ دقیقه (از ۴۵ دقیقه) انجام می‌داد، پس جا زیاد داریم.
-REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "2600"))
-REAL_TEST_WORKERS = int(os.environ.get("REAL_TEST_WORKERS", "48"))
+REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "2000"))
+# ۴۸ کارگر اشتباه بود: رانرِ گیت‌هاب ۴ هسته دارد و ۴۸ پروسه‌ی sing-box همدیگر را
+# خفه کردند (تأییدشده از ۱۳۶ افتاد به ۱۰۱). ۱۴ تعادلِ درست است.
+REAL_TEST_WORKERS = int(os.environ.get("REAL_TEST_WORKERS", "14"))
 _PORT_LOCK = __import__("threading").Lock()
 _next_port = [24000]
 
@@ -419,7 +421,7 @@ def singbox_available():
         return False
 
 
-def real_delay(ob, timeout=8):
+def real_delay(ob, timeout=10):
     """sing-box را با این تک کانفیگ بالا می‌آورد و از تونل یک درخواستِ واقعی می‌زند.
     خروجی: (delay_ms, dl_kbps) یا None اگر کار نکند."""
     import subprocess, tempfile
