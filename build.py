@@ -56,6 +56,44 @@ SUB_URLS = [
     "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/tr",
     "https://raw.githubusercontent.com/mfuu/v2ray/master/merge/all.txt",
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge_yaml.yml",
+    # ── منابعِ بیشتر (هرچه پکیج بزرگ‌تر، خروجیِ تأییدشده بیشتر) ──
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/vless.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/vmess.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/trojan.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/vmess.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/trojan.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/ss.txt",
+    "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/shadowsocks",
+    "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/reality",
+    "https://raw.githubusercontent.com/Kwinshadow/TelegramV2rayCollector/main/sublinks/vless.txt",
+    "https://raw.githubusercontent.com/Kwinshadow/TelegramV2rayCollector/main/sublinks/trojan.txt",
+    "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/ss",
+    "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/v2",
+    "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
+    "https://raw.githubusercontent.com/aiboboxx/v2rayfree/main/v2",
+    "https://raw.githubusercontent.com/freefq/free/master/v2",
+    "https://raw.githubusercontent.com/vpei/Free-Node-Merge/main/o/node.txt",
+    "https://raw.githubusercontent.com/Vauth/node/main/Main",
+    "https://raw.githubusercontent.com/ZywChannel/free/main/sub",
+    "https://raw.githubusercontent.com/mianfeifq/share/main/data2024118.txt",
+    # ── مخصوصِ hysteria2 / tuic (UDP-محور: بهترین برای بازی؛ الان فقط ۱ تا داشتیم) ──
+    "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/hysteria",
+    "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/tuic",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/hysteria.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/tuic.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/hysteria2.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/tuic.txt",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/main/hysteria2",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/main/tuic",
+    "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/hysteria2",
+    "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/tuic",
+]
+# کانال‌های تلگرامِ بیشتر (تنوعِ بیشتر = کانفیگِ زنده‌ی بیشتر)
+CHANNELS += [
+    "v2rayngconfig", "vpnhubmarket", "custom_14v", "v2ray_swhil", "vmesskhonemun",
+    "v2ray_alpha", "vpn_ocean", "netmelli", "v2rayng_matsuri", "hope_net",
+    "oneclickvpnkeys", "v2rayNGvpni", "PrivateVPNs2", "MTConfig", "VlessConfigs",
+    "proxyfarsi", "V2rayNGvpnfree", "vpnrooz", "configforvpn01", "melov2ray",
 ]
 
 GOOD_PROTOS = ("vless", "trojan", "ss", "vmess", "hysteria2", "hy2", "tuic")
@@ -255,7 +293,7 @@ def geoip_batch(ips):
 
 
 # ---- تنظیمات کیفیت ----
-TOP_PER_COUNTRY   = 12     # چند کانفیگِ برتر per کشور در خروجی بماند (کوچیک=failover سریع)
+TOP_PER_COUNTRY   = 20     # چند کانفیگِ برتر per کشور در خروجی بماند (حالا همه تستِ واقعی شده‌اند)
 LIVE_TEST_PER_CC  = 30     # چندتای برترِ هر کشور برای liveness تست شوند
 LIVE_TEST_CAP     = 2500   # سقفِ کلِ تست‌های TCP (تا Action طولانی نشود)
 DEAD_DROP         = 12     # اگر کانفیگی این‌قدر بار پشت‌سرهم مرده بود، از حافظه حذف شود (#10)
@@ -269,6 +307,40 @@ def load_state():
             return json.load(f)
     except Exception:
         return {}
+
+
+# ── مخزنِ انباشتی ──────────────────────────────────────────────────────────
+# هر کانفیگی که تا حالا در اینترنت پیدا کرده‌ایم اینجا می‌ماند و هر اجرا دوباره
+# در استخرِ کاندیداها می‌آید. کانالِ تلگرام پستِ قدیمی را پاک می‌کند ولی سرورش
+# ممکن است ماه‌ها زنده باشد؛ با این کار «پکیجِ» ما هر ۳۰ دقیقه بزرگ‌تر می‌شود.
+POOL_FILE = "pool.txt"
+POOL_MAX = 60000          # سقف (فایل ~۶–۸ مگ) تا مخزن بی‌نهایت رشد نکند
+POOL_STALE_DAYS = 21      # اگر این‌قدر روز نه دیده شد نه جواب داد، حذف
+
+
+def load_pool():
+    """{link: last_ok_or_seen_ts} — از فایلِ متنیِ ساده (هر خط: ts<TAB>link)"""
+    out = {}
+    try:
+        with open(POOL_FILE, encoding="utf-8") as f:
+            for line in f:
+                ts, _, link = line.rstrip("\n").partition("\t")
+                if link and ts.isdigit():
+                    out[link] = int(ts)
+    except Exception:
+        pass
+    return out
+
+
+def save_pool(pool, now):
+    cutoff = now - POOL_STALE_DAYS * 86400
+    items = [(ts, l) for l, ts in pool.items() if ts >= cutoff]
+    items.sort(reverse=True)                 # تازه‌ترها بمانند
+    items = items[:POOL_MAX]
+    with open(POOL_FILE, "w", encoding="utf-8") as f:
+        for ts, l in items:
+            f.write(f"{ts}\t{l}\n")
+    return len(items)
 
 
 def tcp_ok(host, port):
@@ -321,7 +393,10 @@ def game_score(ob, ping, jitter):
 # ==========================================================================
 SB_BIN = os.environ.get("SINGBOX_BIN", "sing-box")   # در CI نصب می‌شود
 REAL_TEST = os.environ.get("REAL_TEST", "1") != "0"
-REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "700"))  # سقفِ کانفیگ‌های تستِ واقعی
+# سقفِ تستِ واقعی — گلوگاهِ اصلی بود: از ۲۶۵۱ زنده فقط ۷۰۰ تست می‌شد و ۱۳۶ تأیید.
+# رانرِ گیت‌هاب کلِ کار را در ~۳ دقیقه (از ۴۵ دقیقه) انجام می‌داد، پس جا زیاد داریم.
+REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "2600"))
+REAL_TEST_WORKERS = int(os.environ.get("REAL_TEST_WORKERS", "48"))
 _PORT_LOCK = __import__("threading").Lock()
 _next_port = [24000]
 
@@ -427,7 +502,9 @@ def score(link, ob, pop, st, now):
     return s
 
 
-CAND_CAP = 3000   # چند کانفیگِ برترِ کل، قبل از liveness (بقیه اصلاً تست/GeoIP نمی‌شوند)
+# استخرِ کاندیدا قبل از liveness. با مخزنِ انباشتی این عدد باید بزرگ باشد وگرنه
+# کانفیگ‌های ذخیره‌شده‌ی قدیمی هیچ‌وقت دوباره شانسِ تست پیدا نمی‌کنند.
+CAND_CAP = int(os.environ.get("CAND_CAP", "12000"))
 
 
 def main():
@@ -444,8 +521,15 @@ def main():
         for links in ex.map(lambda u: extract(fetch(u)), sources):
             for l in links:
                 pop[l] += 1
-    all_links = list(pop)
-    print(f"{len(all_links)} کانفیگِ یکتا از {len(sources)} منبع")
+    fresh = list(pop)
+    print(f"{len(fresh)} کانفیگِ یکتا از {len(sources)} منبع")
+
+    # ── مخزنِ انباشتی: هرچه تا حالا پیدا کرده‌ایم را هم به کاندیداها اضافه کن ──
+    pool = load_pool()
+    for l in fresh:
+        pool[l] = now                       # تازه دیده شد
+    all_links = list(pool)
+    print(f"مخزنِ انباشتی: {len(pool)} کانفیگ (تازه: {len(fresh)}، از قبل: {len(pool) - len(fresh)})")
 
     # تبدیل + dedup بر اساس هویتِ سرور (نه اسم)
     items = []; seen_id = set()
@@ -503,7 +587,7 @@ def main():
     if REAL_TEST and singbox_available():
         target = alive[:REAL_TEST_CAP]
         print(f"تستِ واقعی (sing-box) روی {len(target)} کانفیگِ برتر…")
-        with ThreadPoolExecutor(max_workers=24) as ex:
+        with ThreadPoolExecutor(max_workers=REAL_TEST_WORKERS) as ex:
             futs = {ex.submit(real_delay, ob): (host, ob, link) for host, ob, link in target}
             for fut in as_completed(futs):
                 host, ob, link = futs[fut]
@@ -639,6 +723,43 @@ def main():
         f.write(base64.b64encode("\n".join(game_entries).encode()).decode())
     print(f"گیم: {len(game_entries)} کانفیگ (پینگ ≤{GAME_MAX_PING}ms، جیتر ≤{GAME_MAX_JITTER}ms)")
 
+    # ══════════════════════════════════════════════════════════════════════
+    #  manifest.json — «شبیه‌سازِ نت»
+    #  گیت‌هاب نمی‌تواند فیلترینگِ ایران را ببیند (رانرش در آمریکا/اروپاست)، پس
+    #  نمی‌تواند بگوید کدام کانفیگ *از داخلِ ایران* باز می‌شود. ولی می‌تواند هر
+    #  کانفیگِ تأییدشده را با ویژگی‌هایش برچسب بزند؛ آن‌وقت اپ روی PCِ تو نتت را
+    #  تحلیل می‌کند (UDP باز؟ SNI-DPI؟ کدام پورت‌ها؟ کلادفلر؟) و فقط کانفیگ‌های
+    #  «مناسبِ همان نت» را برمی‌دارد — یعنی به‌جای تستِ ۴۰۰ کانفیگ، ۲۰ تا.
+    #  این همان چیزی است که مصرفِ دیتای تو را می‌خورد و اینجا حل می‌شود.
+    # ══════════════════════════════════════════════════════════════════════
+    CDN_PORTS = {80, 443, 2052, 2053, 2082, 2083, 2086, 2087, 2095, 2096, 8080, 8443}
+    manifest = []
+    for host, ob, link in alive:
+        code = (cc.get(host_ip.get(host)) if host_ip.get(host) else None) or "XX"
+        tls = ob.get("tls") or {}
+        tr = (ob.get("transport") or {}).get("type") or "tcp"
+        port = int(ob.get("server_port") or 0)
+        feats = {
+            "t": ob["type"],                              # پروتکل
+            "p": port,                                    # پورت
+            "n": tr,                                      # transport (tcp/ws/grpc/http)
+            "cc": code,
+            "udp": ob["type"] in ("hysteria2", "tuic"),   # نیازمندِ باز بودنِ UDP
+            "re": bool(tls.get("reality")),               # REALITY (ضدِ SNI-DPI)
+            "tls": bool(tls),
+            "cdn": port in CDN_PORTS and tr in ("ws", "grpc", "http"),  # پشتِ CDN/Worker
+        }
+        r = real.get(link)
+        if r:
+            feats["ms"] = int(r[0])
+            if r[1] > 200: feats["kbps"] = int(r[1])
+        feats["u"] = link.split("#", 1)[0]
+        manifest.append(feats)
+    with open("manifest.json", "w", encoding="utf-8") as f:
+        json.dump({"updated": now, "count": len(manifest), "configs": manifest},
+                  f, ensure_ascii=False, separators=(",", ":"))
+    print(f"manifest.json: {len(manifest)} کانفیگِ برچسب‌خورده (اپ بدونِ تست فیلتر می‌کند)")
+
     # ── ساب‌های تخصصیِ دیگر ──
     # ۱) stream.txt — برای استریم/دانلود: کشورهایی که سرویس‌ها معمولاً باز می‌کنند
     #    (آمریکا/بریتانیا/آلمان/هلند/فرانسه/کانادا) و پهنای باندِ پایدار مهم‌تر از پینگ است.
@@ -747,7 +868,16 @@ font-size:.8rem;word-break:break-all}}</style></head><body>
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state, f)
 
-    print(f"ساخته شد: {len(all_tags)} کانفیگ در {len(by_country)} کشور | زنده: {len(alive)} | حافظه: {len(state)}")
+    # مخزنِ انباشتی: هرچه امروز جواب داد را «تازه» علامت بزن تا دیرتر کهنه شود،
+    # و کانفیگ‌هایی که خیلی وقت است نه دیده شده‌اند نه جواب داده‌اند حذف شوند.
+    for _h, _o, l in alive:
+        pool[l] = now
+    for l in real:
+        pool[l] = now
+    kept = save_pool(pool, now)
+
+    print(f"ساخته شد: {len(all_tags)} کانفیگ در {len(by_country)} کشور | "
+          f"زنده: {len(alive)} | تأییدشده: {len(real)} | مخزن: {kept} | حافظه: {len(state)}")
 
 
 if __name__ == "__main__":
