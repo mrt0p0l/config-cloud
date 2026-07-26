@@ -395,7 +395,7 @@ SB_BIN = os.environ.get("SINGBOX_BIN", "sing-box")   # در CI نصب می‌ش�
 REAL_TEST = os.environ.get("REAL_TEST", "1") != "0"
 # سقفِ تستِ واقعی — گلوگاهِ اصلی بود: از ۲۶۵۱ زنده فقط ۷۰۰ تست می‌شد و ۱۳۶ تأیید.
 # رانرِ گیت‌هاب کلِ کار را در ~۳ دقیقه (از ۴۵ دقیقه) انجام می‌داد، پس جا زیاد داریم.
-REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "2000"))
+REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "3000"))
 # ۴۸ کارگر اشتباه بود: رانرِ گیت‌هاب ۴ هسته دارد و ۴۸ پروسه‌ی sing-box همدیگر را
 # خفه کردند (تأییدشده از ۱۳۶ افتاد به ۱۰۱). ۱۴ تعادلِ درست است.
 REAL_TEST_WORKERS = int(os.environ.get("REAL_TEST_WORKERS", "14"))
@@ -528,10 +528,13 @@ def main():
 
     # ── مخزنِ انباشتی: هرچه تا حالا پیدا کرده‌ایم را هم به کاندیداها اضافه کن ──
     pool = load_pool()
+    before = len(pool)
+    revived = sum(1 for l in pool if l not in pop)   # فقط در مخزن هست، منابع دیگر ندارندش
     for l in fresh:
         pool[l] = now                       # تازه دیده شد
     all_links = list(pool)
-    print(f"مخزنِ انباشتی: {len(pool)} کانفیگ (تازه: {len(fresh)}، از قبل: {len(pool) - len(fresh)})")
+    print(f"مخزنِ انباشتی: {len(pool)} کانفیگ (تازه از منابع: {len(fresh)}، "
+          f"از مخزنِ قبلی: {before}، فقط-در-مخزن: {revived})")
 
     # تبدیل + dedup بر اساس هویتِ سرور (نه اسم)
     items = []; seen_id = set()
@@ -587,7 +590,21 @@ def main():
     # ── تستِ واقعی با sing-box: فقط کانفیگ‌هایی که *واقعاً ترافیک رد می‌کنند* ──
     real = {}   # link -> (delay_ms, kbps)
     if REAL_TEST and singbox_available():
-        target = alive[:REAL_TEST_CAP]
+        # اولویتِ صف — درسِ گران‌بها: وقتی استخر بزرگ شد، مرتب‌سازیِ صرفاً بر اساسِ
+        # پینگ/امتیاز پر شد از کانفیگ‌های کم‌پینگِ بی‌کیفیت و «تأییدشده‌های دفعه‌ی قبل»
+        # از صدر بیرون افتادند (تأییدشده از ۱۳۶ افتاد به ۶۳).
+        # حالا اول همه‌ی کانفیگ‌هایی که قبلاً *واقعاً* جواب داده‌اند تست می‌شوند،
+        # بعد بقیه به ترتیبِ رتبه. این‌طور کیفیت روی هم انباشته می‌شود.
+        proven, others = [], []
+        for t3 in alive:
+            st = state.get(t3[2], {})
+            if st.get("real_ok", 0) > now - 7 * 86400:   # هفته‌ی اخیر واقعاً کار کرده
+                proven.append(t3)
+            else:
+                others.append(t3)
+        proven.sort(key=lambda t: state.get(t[2], {}).get("real_ms", 9999))
+        target = (proven + others)[:REAL_TEST_CAP]
+        print(f"صفِ تست: {len(proven)} تأییدشده‌ی قبلی + {len(target) - min(len(proven), len(target))} جدید")
         print(f"تستِ واقعی (sing-box) روی {len(target)} کانفیگِ برتر…")
         with ThreadPoolExecutor(max_workers=REAL_TEST_WORKERS) as ex:
             futs = {ex.submit(real_delay, ob): (host, ob, link) for host, ob, link in target}
