@@ -14,7 +14,7 @@ build.py — سازنده‌ی ابری کانفیگ (روی GitHub Actions اج
 PC تو فقط singbox.json را در hiddify import می‌کند — یک ورودیِ ثابت، failover خودکار،
 و ping‌های محلیِ ریز. مصرفِ خارجیِ تو ~صفر.
 """
-import os, re, ssl, json, gzip, base64, socket, urllib.request, urllib.parse
+import os, re, ssl, json, gzip, time, base64, socket, urllib.request, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
 # ---- منابع (هرچه بیشتر بهتر — روی گیت‌هاب محدودیت نداریم) ----
@@ -279,6 +279,141 @@ def tcp_ok(host, port):
         return False
 
 
+def tcp_latency(host, port, tries=3):
+    """تأخیر و جیترِ واقعی (نه فقط «پورت باز است») — برای انتخابِ سرورِ گیم.
+    چند بار وصل می‌شود: میانه = پینگ، اختلافِ بیشینه/کمینه = جیتر (ناپایداری).
+    خروجی: (ping_ms, jitter_ms) یا None اگر مرده باشد."""
+    ts = []
+    for _ in range(tries):
+        t0 = time.perf_counter()
+        try:
+            s = socket.create_connection((host, int(port)), timeout=2.5)
+            ts.append((time.perf_counter() - t0) * 1000.0)
+            s.close()
+        except Exception:
+            pass
+    if not ts:
+        return None
+    ts.sort()
+    ping = ts[len(ts) // 2]                     # میانه = مقاوم به یک نمونه‌ی پرت
+    jitter = (ts[-1] - ts[0]) if len(ts) > 1 else 0.0
+    return (round(ping, 1), round(jitter, 1))
+
+
+# کانفیگِ خوبِ گیم: پینگِ کم + جیترِ کم + ترجیحاً پروتکلِ UDP-محور (hy2/tuic)
+GAME_MAX_PING   = 220     # میلی‌ثانیه — بالاتر از این برای بازی بی‌فایده است
+GAME_MAX_JITTER = 60      # میلی‌ثانیه — ناپایداری = لگ/پرش در بازی
+
+
+def game_score(ob, ping, jitter):
+    """امتیازِ گیم: کم‌ترین بهتر. جیتر برای بازی از پینگ هم آزاردهنده‌تر است."""
+    s = ping + jitter * 2.0
+    if ob["type"] in ("hysteria2", "tuic"):
+        s -= 60           # QUIC/UDP: پکت‌لاس را خودش جبران می‌کند → برای بازی به‌مراتب بهتر
+    return s
+
+
+# ==========================================================================
+#   تستِ واقعیِ کانفیگ با sing-box (روی رانرِ گیت‌هاب) — «real delay»
+#   TCP باز بودن هیچ تضمینی نیست: خیلی کانفیگ‌ها پورتشان باز است ولی کلید/uuid
+#   منقضی شده و اصلاً ترافیک رد نمی‌کنند. اینجا واقعاً sing-box را بالا می‌آوریم و
+#   از داخلِ تونل یک درخواستِ HTTP می‌زنیم → فقط کانفیگ‌هایی می‌مانند که *کار می‌کنند*.
+# ==========================================================================
+SB_BIN = os.environ.get("SINGBOX_BIN", "sing-box")   # در CI نصب می‌شود
+REAL_TEST = os.environ.get("REAL_TEST", "1") != "0"
+REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "700"))  # سقفِ کانفیگ‌های تستِ واقعی
+_PORT_LOCK = __import__("threading").Lock()
+_next_port = [24000]
+
+
+def _grab_port():
+    with _PORT_LOCK:
+        p = _next_port[0]
+        _next_port[0] += 1
+        if _next_port[0] > 42000:
+            _next_port[0] = 24000
+        return p
+
+
+def singbox_available():
+    import subprocess
+    try:
+        subprocess.run([SB_BIN, "version"], capture_output=True, timeout=10)
+        return True
+    except Exception:
+        return False
+
+
+def real_delay(ob, timeout=8):
+    """sing-box را با این تک کانفیگ بالا می‌آورد و از تونل یک درخواستِ واقعی می‌زند.
+    خروجی: (delay_ms, dl_kbps) یا None اگر کار نکند."""
+    import subprocess, tempfile
+    port = _grab_port()
+    cfg = {
+        "log": {"level": "fatal"},
+        "inbounds": [{"type": "mixed", "tag": "in", "listen": "127.0.0.1", "listen_port": port}],
+        "outbounds": [dict(ob, tag="proxy"), {"type": "direct", "tag": "direct"}],
+        "route": {"final": "proxy"},
+    }
+    f = tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8")
+    json.dump(cfg, f, ensure_ascii=False)
+    f.close()
+    proc = None
+    try:
+        proc = subprocess.Popen([SB_BIN, "run", "-c", f.name],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # منتظرِ بالا آمدنِ پورت
+        up = False
+        deadline = time.time() + 6
+        while time.time() < deadline:
+            if proc.poll() is not None:
+                return None                 # sing-box خودش مرد = کانفیگ نامعتبر
+            try:
+                socket.create_connection(("127.0.0.1", port), timeout=0.4).close()
+                up = True
+                break
+            except Exception:
+                time.sleep(0.15)
+        if not up:
+            return None
+        px = urllib.request.ProxyHandler({"http": f"http://127.0.0.1:{port}",
+                                          "https": f"http://127.0.0.1:{port}"})
+        opener = urllib.request.build_opener(px)
+        # ۱) تأخیرِ واقعی
+        t0 = time.perf_counter()
+        try:
+            r = opener.open("http://cp.cloudflare.com/generate_204", timeout=timeout)
+            r.read(64)
+            if r.status not in (200, 204):
+                return None
+        except Exception:
+            return None
+        delay = (time.perf_counter() - t0) * 1000.0
+        # ۲) سرعتِ تقریبی (دانلودِ کوچک ~256KB) — برای استریم/دانلود مهم است
+        kbps = 0.0
+        try:
+            t1 = time.perf_counter()
+            r2 = opener.open("http://speed.cloudflare.com/__down?bytes=262144", timeout=timeout)
+            n = len(r2.read())
+            dt = max(time.perf_counter() - t1, 0.001)
+            kbps = (n / 1024.0) / dt
+        except Exception:
+            pass
+        return (round(delay, 1), round(kbps, 1))
+    except Exception:
+        return None
+    finally:
+        if proc:
+            try:
+                proc.kill(); proc.wait(timeout=5)
+            except Exception:
+                pass
+        try:
+            os.unlink(f.name)
+        except Exception:
+            pass
+
+
 def score(link, ob, pop, st, now):
     """رتبه: reality/tls امن‌تر، hy2/tuic برای پکت‌لاست بهتر، محبوبیت، و تاریخچه."""
     s = 0.0
@@ -337,19 +472,61 @@ def main():
     cand = items[:CAND_CAP]
 
     # liveness روی برترها (create_connection خودش resolve می‌کند)
-    print(f"تستِ liveness روی {len(cand)} کانفیگِ برتر…")
+    print(f"تستِ تأخیر/جیتر روی {len(cand)} کانفیگِ برتر…")
     alive = []
+    lat = {}   # link -> (ping_ms, jitter_ms)
     with ThreadPoolExecutor(max_workers=300) as ex:
-        futs = {ex.submit(tcp_ok, ob["server"], ob["server_port"]): (host, ob, link)
+        futs = {ex.submit(tcp_latency, ob["server"], ob["server_port"]): (host, ob, link)
                 for host, ob, link in cand}
         for fut in as_completed(futs):
             host, ob, link = futs[fut]
             st = state.setdefault(link, {}); st["seen"] = now
-            if fut.result():
-                alive.append((host, ob, link)); st["dead"] = 0; st["last_ok"] = now
+            r = fut.result()
+            if r:
+                ping, jitter = r
+                lat[link] = r
+                st["dead"] = 0; st["last_ok"] = now; st["ping"] = ping; st["jitter"] = jitter
+                alive.append((host, ob, link))
             else:
                 st["dead"] = st.get("dead", 0) + 1
-    print(f"زنده: {len(alive)}")
+    # مرتب‌سازیِ ترکیبی: پینگ و جیترِ واقعی + امتیازِ کیفیت (reality/tls، محبوبیت، تاریخچه).
+    # فقط-پینگ کافی نیست (کانفیگِ کم‌پینگِ ناامن/بی‌دوام بالا می‌آمد) و فقط-امتیاز هم پینگ را
+    # نادیده می‌گرفت — همان چیزی که باعث می‌شد «پینگ سرِ کانفیگ‌های بد برود بالا».
+    def _rank(t):
+        ping, jitter = lat.get(t[2], (9999, 0))
+        return ping + jitter * 2.0 - score(t[2], t[1], pop, state.get(t[2], {}), now) * 15.0
+    alive.sort(key=_rank)
+    print(f"زنده (TCP): {len(alive)}")
+
+    # ── تستِ واقعی با sing-box: فقط کانفیگ‌هایی که *واقعاً ترافیک رد می‌کنند* ──
+    real = {}   # link -> (delay_ms, kbps)
+    if REAL_TEST and singbox_available():
+        target = alive[:REAL_TEST_CAP]
+        print(f"تستِ واقعی (sing-box) روی {len(target)} کانفیگِ برتر…")
+        with ThreadPoolExecutor(max_workers=24) as ex:
+            futs = {ex.submit(real_delay, ob): (host, ob, link) for host, ob, link in target}
+            for fut in as_completed(futs):
+                host, ob, link = futs[fut]
+                r = fut.result()
+                st = state.setdefault(link, {})
+                if r:
+                    real[link] = r
+                    st["real_ms"], st["kbps"] = r[0], r[1]
+                    st["real_ok"] = now
+                    st["real_fail"] = 0
+                else:
+                    st["real_fail"] = st.get("real_fail", 0) + 1
+        print(f"واقعاً کار می‌کنند: {len(real)} از {len(target)}")
+        # فقط تست‌شده‌های موفق بمانند (اگر تعدادشان معقول بود)؛ وگرنه به TCP برگرد
+        verified = [t for t in alive if t[2] in real]
+        if len(verified) >= 25:
+            verified.sort(key=lambda t: real[t[2]][0] - min(real[t[2]][1], 4000) / 200.0)
+            alive = verified
+            print(f"لیست به {len(alive)} کانفیگِ تأییدشده محدود شد")
+        else:
+            print("تعدادِ تأییدشده کم بود — از نتیجه‌ی TCP استفاده می‌شود")
+    else:
+        print("تستِ واقعی غیرفعال/در دسترس نیست — فقط TCP")
 
     # GeoIP فقط روی زنده‌ها (چند صدتا)
     hosts = {h for h, _o, _l in alive}
@@ -388,8 +565,13 @@ def main():
             ob = dict(ob); ob["tag"] = tag
             outbounds.append(ob); all_tags.append(tag)
             by_country.setdefault(code, []).append(tag)
-            # همان لینکِ اصلی، ولی با اسمِ پرچم‌دارِ کشوری (برای هر کلاینتی)
-            sub_entries.append(link.split("#", 1)[0] + "#" + urllib.parse.quote(f"{flag} {code} | {ob['type']}"))
+            # همان لینکِ اصلی، ولی با اسمِ پرچم‌دار + تأخیرِ اندازه‌گیری‌شده (✅ = تستِ واقعی پاس شده)
+            if link in real:
+                _pt = f" | ✅{int(real[link][0])}ms"
+            else:
+                _p = lat.get(link)
+                _pt = f" | {int(_p[0])}ms" if _p else ""
+            sub_entries.append(link.split("#", 1)[0] + "#" + urllib.parse.quote(f"{flag} {code} | {ob['type']}{_pt}"))
 
     # گروهِ urltest per کشور (failoverِ سریع) + گروهِ کلی + انتخابگر
     country_groups = []
@@ -423,6 +605,76 @@ def main():
     sub_text = "\n".join(sub_entries) if sub_entries else "\n".join(sorted(all_links)[:400])
     with open("sub.txt", "w", encoding="utf-8") as f:
         f.write(base64.b64encode(sub_text.encode()).decode())
+
+    # ── ساب مخصوصِ گیم: کم‌پینگ‌ترین + پایدارترین (جیترِ کم) + ترجیحِ hy2/tuic ──
+    # برای بازی، جیتر (ناپایداری) از پینگ هم آزاردهنده‌تر است، و پروتکل‌های UDP-محور
+    # (hysteria2/tuic) پکت‌لاس را جبران می‌کنند. اینجا فقط همان‌ها را جدا می‌کنیم.
+    game_pool = []
+    for host, ob, link in alive:
+        r = lat.get(link)
+        if not r:
+            continue
+        ping, jitter = r
+        # اگر تستِ واقعی داریم، تأخیرِ واقعی (از داخلِ تونل) ملاک است — نه صرفِ TCP
+        if link in real:
+            ping = real[link][0]
+        if ping > GAME_MAX_PING or jitter > GAME_MAX_JITTER:
+            continue
+        game_pool.append((game_score(ob, ping, jitter), ping, jitter, host, ob, link))
+    game_pool.sort(key=lambda t: t[0])
+    game_entries = []
+    seen_game_srv = set()
+    for _s, ping, jitter, host, ob, link in game_pool:
+        key = (ob["server"], ob["server_port"])
+        if key in seen_game_srv:      # از هر سرور یکی (تنوع بیشتر برای failover)
+            continue
+        seen_game_srv.add(key)
+        code = (cc.get(host_ip.get(host)) if host_ip.get(host) else None) or "XX"
+        udp = "⚡" if ob["type"] in ("hysteria2", "tuic") else ""
+        name = f"{udp}🎮 {cc_to_flag(code)} {code} | {ob['type']} | {int(ping)}ms"
+        game_entries.append(link.split("#", 1)[0] + "#" + urllib.parse.quote(name))
+        if len(game_entries) >= 80:
+            break
+    with open("game.txt", "w", encoding="utf-8") as f:
+        f.write(base64.b64encode("\n".join(game_entries).encode()).decode())
+    print(f"گیم: {len(game_entries)} کانفیگ (پینگ ≤{GAME_MAX_PING}ms، جیتر ≤{GAME_MAX_JITTER}ms)")
+
+    # ── ساب‌های تخصصیِ دیگر ──
+    # ۱) stream.txt — برای استریم/دانلود: کشورهایی که سرویس‌ها معمولاً باز می‌کنند
+    #    (آمریکا/بریتانیا/آلمان/هلند/فرانسه/کانادا) و پهنای باندِ پایدار مهم‌تر از پینگ است.
+    STREAM_CC = ("US", "GB", "UK", "DE", "NL", "FR", "CA", "SE", "FI", "JP", "SG")
+    stream_pool = []
+    for host, ob, link in alive:
+        code = (cc.get(host_ip.get(host)) if host_ip.get(host) else None) or "XX"
+        if code not in STREAM_CC:
+            continue
+        kbps = real.get(link, (0, 0))[1]
+        stream_pool.append((-kbps, code, ob, link))   # پهنای باندِ بیشتر = بالاتر
+    stream_pool.sort(key=lambda t: t[0])
+    stream_entries = []
+    for _negk, code, ob, link in stream_pool[:80]:
+        kbps = real.get(link, (0, 0))[1]
+        sp = f" | {int(kbps/1024*8)}Mb" if kbps > 200 else ""
+        pt = f" | ✅{int(real[link][0])}ms" if link in real else (
+             f" | {int(lat[link][0])}ms" if link in lat else "")
+        stream_entries.append(link.split("#", 1)[0] + "#" +
+                              urllib.parse.quote(f"🎬 {cc_to_flag(code)} {code} | {ob['type']}{pt}{sp}"))
+    with open("stream.txt", "w", encoding="utf-8") as f:
+        f.write(base64.b64encode("\n".join(stream_entries).encode()).decode())
+
+    # ۲) udp.txt — فقط پروتکل‌های UDP-محور (hysteria2/tuic): بهترین برای بازی/تماسِ تصویری
+    udp_entries = []
+    for host, ob, link in alive:
+        if ob["type"] not in ("hysteria2", "tuic"):
+            continue
+        code = (cc.get(host_ip.get(host)) if host_ip.get(host) else None) or "XX"
+        r = lat.get(link)
+        pt = f" | {int(r[0])}ms" if r else ""
+        udp_entries.append(link.split("#", 1)[0] + "#" +
+                           urllib.parse.quote(f"⚡ {cc_to_flag(code)} {code} | {ob['type']}{pt}"))
+    with open("udp.txt", "w", encoding="utf-8") as f:
+        f.write(base64.b64encode("\n".join(udp_entries).encode()).decode())
+    print(f"استریم: {len(stream_entries)} · UDP(hy2/tuic): {len(udp_entries)}")
 
     # ── ساب جدا برای هر کشور (IPت در یک کشور ثابت می‌ماند) — ایده‌ی خودت ──
     import os as _os, shutil as _sh
