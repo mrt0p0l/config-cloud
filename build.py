@@ -87,6 +87,17 @@ SUB_URLS = [
     "https://raw.githubusercontent.com/mheidari98/.proxy/main/tuic",
     "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/hysteria2",
     "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/tuic",
+    # ── منابعِ تازه (۲۰۲۶-۰۷-۲۷، همه با curl تست شدند و واقعاً کانفیگ می‌دهند) ──
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt",
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/all_extracted_configs.txt",
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/vless_configs.txt",
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/trojan_configs.txt",
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/vmess_configs.txt",
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/ss_configs.txt",
+    "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/main/configs/proxy_configs.txt",
+    "https://raw.githubusercontent.com/Surfboardv2ray/Proxy-sorter/main/submerge/converted.txt",
+    "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub.txt",
+    "https://raw.githubusercontent.com/hans-thomas/v2ray-subscription/master/servers.txt",
 ]
 # کانال‌های تلگرامِ بیشتر (تنوعِ بیشتر = کانفیگِ زنده‌ی بیشتر)
 CHANNELS += [
@@ -395,7 +406,7 @@ SB_BIN = os.environ.get("SINGBOX_BIN", "sing-box")   # در CI نصب می‌ش�
 REAL_TEST = os.environ.get("REAL_TEST", "1") != "0"
 # سقفِ تستِ واقعی — گلوگاهِ اصلی بود: از ۲۶۵۱ زنده فقط ۷۰۰ تست می‌شد و ۱۳۶ تأیید.
 # رانرِ گیت‌هاب کلِ کار را در ~۳ دقیقه (از ۴۵ دقیقه) انجام می‌داد، پس جا زیاد داریم.
-REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "3000"))
+REAL_TEST_CAP = int(os.environ.get("REAL_TEST_CAP", "5000"))
 # ۴۸ کارگر اشتباه بود: رانرِ گیت‌هاب ۴ هسته دارد و ۴۸ پروسه‌ی sing-box همدیگر را
 # خفه کردند (تأییدشده از ۱۳۶ افتاد به ۱۰۱). ۱۴ تعادلِ درست است.
 REAL_TEST_WORKERS = int(os.environ.get("REAL_TEST_WORKERS", "14"))
