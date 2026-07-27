@@ -98,6 +98,24 @@ SUB_URLS = [
     "https://raw.githubusercontent.com/Surfboardv2ray/Proxy-sorter/main/submerge/converted.txt",
     "https://raw.githubusercontent.com/liketolivefree/kobabi/main/sub.txt",
     "https://raw.githubusercontent.com/hans-thomas/v2ray-subscription/master/servers.txt",
+    # ── دورِ دومِ منابعِ تازه (۲۰۲۶-۰۷-۲۷، همه با curl تست شدند) ──
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Sub1.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Sub2.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Sub3.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Sub4.txt",
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
+    "https://raw.githubusercontent.com/AzadNetCH/Clash/main/AzadNet.txt",
+    "https://raw.githubusercontent.com/ts-sf/fly/main/v2",
+    "https://raw.githubusercontent.com/ermaozi01/free_clash_vpn/main/subscribe/v2ray.txt",
+    "https://raw.githubusercontent.com/Rayan-Config/C-Sub/main/configs/proxy.txt",
+    "https://raw.githubusercontent.com/ALIILAPRO/v2rayNG-Config/main/sub.txt",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/main/vless",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/main/trojan",
+    "https://raw.githubusercontent.com/mheidari98/.proxy/main/vmess",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/ss.txt",
+    "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/vless",
+    "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/vmess",
+    "https://raw.githubusercontent.com/Surfboardv2ray/TGParse/main/splitted/trojan",
 ]
 # کانال‌های تلگرامِ بیشتر (تنوعِ بیشتر = کانفیگِ زنده‌ی بیشتر)
 CHANNELS += [
