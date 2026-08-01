@@ -2,31 +2,30 @@
 
 لینکِ خامِ هر کشوری را که می‌خواهی، جدا به‌عنوان یک subscription اضافه کن:
 
-- 🇨🇦 **کانادا** (CA) — 96 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CA.txt`
+- 🇨🇦 **کانادا** (CA) — 112 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CA.txt`
+- 🇺🇸 **آمریکا** (US) — 74 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/US.txt`
 - 🇭🇰 **هنگ‌کنگ** (HK) — 68 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/HK.txt`
-- 🇺🇸 **آمریکا** (US) — 67 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/US.txt`
-- 🇩🇪 **آلمان** (DE) — 26 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/DE.txt`
-- 🇳🇱 **هلند** (NL) — 23 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/NL.txt`
+- 🇳🇱 **هلند** (NL) — 24 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/NL.txt`
+- 🇩🇪 **آلمان** (DE) — 23 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/DE.txt`
+- 🇷🇺 **روسیه** (RU) — 13 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/RU.txt`
 - 🇫🇮 **فنلاند** (FI) — 11 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/FI.txt`
-- 🇵🇭 **PH** (PH) — 10 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/PH.txt`
 - 🇫🇷 **فرانسه** (FR) — 8 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/FR.txt`
+- 🇵🇭 **PH** (PH) — 8 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/PH.txt`
+- 🇬🇧 **انگلیس** (GB) — 6 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/GB.txt`
 - 🇯🇵 **ژاپن** (JP) — 5 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/JP.txt`
-- 🇬🇧 **انگلیس** (GB) — 4 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/GB.txt`
-- 🇷🇺 **روسیه** (RU) — 4 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/RU.txt`
+- 🇸🇨 **SC** (SC) — 4 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SC.txt`
+- 🇵🇱 **لهستان** (PL) — 3 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/PL.txt`
 - 🇰🇷 **کره** (KR) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/KR.txt`
+- 🇪🇸 **اسپانیا** (ES) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/ES.txt`
 - 🇧🇬 **بلغارستان** (BG) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/BG.txt`
-- 🇱🇻 **لتونی** (LV) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/LV.txt`
-- 🇵🇱 **لهستان** (PL) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/PL.txt`
-- 🇸🇪 **سوئد** (SE) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SE.txt`
+- 🇦🇹 **اتریش** (AT) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/AT.txt`
 - 🇧🇷 **برزیل** (BR) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/BR.txt`
-- 🇸🇨 **SC** (SC) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SC.txt`
-- 🇨🇭 **سوئیس** (CH) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CH.txt`
-- 🇪🇪 **استونی** (EE) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/EE.txt`
+- 🇸🇬 **سنگاپور** (SG) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SG.txt`
 - 🇱🇹 **لیتوانی** (LT) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/LT.txt`
-- 🇵🇦 **پاناما** (PA) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/PA.txt`
+- 🇱🇻 **لتونی** (LV) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/LV.txt`
 - 🇸🇦 **عربستان** (SA) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SA.txt`
-- 🇦🇹 **اتریش** (AT) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/AT.txt`
 - 🇦🇲 **ارمنستان** (AM) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/AM.txt`
-- 🇷🇴 **رومانی** (RO) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/RO.txt`
+- 🇪🇪 **استونی** (EE) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/EE.txt`
 - 🇰🇿 **قزاقستان** (KZ) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/KZ.txt`
-- 🇪🇸 **اسپانیا** (ES) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/ES.txt`
+- 🇸🇪 **سوئد** (SE) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SE.txt`
+- 🇷🇴 **رومانی** (RO) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/RO.txt`
