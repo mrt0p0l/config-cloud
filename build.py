@@ -31,8 +31,8 @@ CHANNELS = [
     "v2rayng_config","mahsaamneh","daorg","ShadowsocksM",
 ]
 SUB_URLS = [
-    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt",
     "https://yamyamproxyy.github.io/Yamyamproxy/data/sub.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/All_Configs_Sub.txt",
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt",
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt",
     "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt",
@@ -337,6 +337,27 @@ def load_state():
             return json.load(f)
     except Exception:
         return {}
+
+
+# سقفِ حجمِ state.json: گیت‌هاب از ۵۰MB هشدار و از ۱۰۰MB push را رد می‌کند.
+# اگر بزرگ‌تر شد، قدیمی‌ترین ورودی‌ها (کمترین seen/last_ok/real_ok) اول کنار می‌روند.
+STATE_MAX_BYTES = 40 * 1024 * 1024
+
+
+def save_state(state):
+    data = json.dumps(state, separators=(",", ":"))
+    if len(data) > STATE_MAX_BYTES:
+        def _age(l):
+            s = state[l]
+            return max(s.get("real_ok", 0), s.get("last_ok", 0), s.get("seen", 0))
+        keys = sorted(state, key=_age, reverse=True)   # تازه‌ترها اول
+        n = len(keys)
+        while len(data) > STATE_MAX_BYTES and n > 1000:
+            n = int(n * 0.8)
+            data = json.dumps({k: state[k] for k in keys[:n]}, separators=(",", ":"))
+        print(f"state.json بزرگ بود؛ به {n} ورودی کوتاه شد")
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        f.write(data)
 
 
 # ── مخزنِ انباشتی ──────────────────────────────────────────────────────────
@@ -914,8 +935,7 @@ font-size:.8rem;word-break:break-all}}</style></head><body>
         st = state[l]
         if (st.get("dead", 0) >= DEAD_DROP) or (st.get("seen", 0) < cutoff):
             del state[l]
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f)
+    save_state(state)
 
     # مخزنِ انباشتی: هرچه امروز جواب داد را «تازه» علامت بزن تا دیرتر کهنه شود،
     # و کانفیگ‌هایی که خیلی وقت است نه دیده شده‌اند نه جواب داده‌اند حذف شوند.
