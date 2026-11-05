@@ -2,13 +2,17 @@
 
 لینکِ خامِ هر کشوری را که می‌خواهی، جدا به‌عنوان یک subscription اضافه کن:
 
-- 🇺🇸 **آمریکا** (US) — 77 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/US.txt`
-- 🇨🇦 **کانادا** (CA) — 67 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CA.txt`
-- 🇳🇱 **هلند** (NL) — 20 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/NL.txt`
+- 🇨🇦 **کانادا** (CA) — 140 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CA.txt`
+- 🇺🇸 **آمریکا** (US) — 96 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/US.txt`
+- 🇳🇱 **هلند** (NL) — 22 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/NL.txt`
 - 🇫🇷 **فرانسه** (FR) — 3 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/FR.txt`
-- 🇩🇪 **آلمان** (DE) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/DE.txt`
+- 🇩🇪 **آلمان** (DE) — 3 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/DE.txt`
+- 🇯🇵 **ژاپن** (JP) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/JP.txt`
+- 🇨🇷 **CR** (CR) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CR.txt`
 - 🇪🇸 **اسپانیا** (ES) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/ES.txt`
+- 🇨🇼 **کوراسائو** (CW) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CW.txt`
 - 🇨🇿 **چک** (CZ) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CZ.txt`
 - 🇧🇬 **بلغارستان** (BG) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/BG.txt`
 - 🇭🇰 **هنگ‌کنگ** (HK) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/HK.txt`
-- 🇯🇵 **ژاپن** (JP) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/JP.txt`
+- 🇸🇨 **SC** (SC) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/SC.txt`
+- 🇺🇦 **اوکراین** (UA) — 1 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/UA.txt`
