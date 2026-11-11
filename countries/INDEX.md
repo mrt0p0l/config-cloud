@@ -2,8 +2,8 @@
 
 لینکِ خامِ هر کشوری را که می‌خواهی، جدا به‌عنوان یک subscription اضافه کن:
 
-- 🇺🇸 **آمریکا** (US) — 191 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/US.txt`
-- 🇨🇦 **کانادا** (CA) — 42 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CA.txt`
+- 🇺🇸 **آمریکا** (US) — 182 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/US.txt`
+- 🇨🇦 **کانادا** (CA) — 19 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/CA.txt`
 - 🇳🇱 **هلند** (NL) — 16 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/NL.txt`
 - 🇫🇷 **فرانسه** (FR) — 3 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/FR.txt`
 - 🇩🇪 **آلمان** (DE) — 2 کانفیگ → `https://raw.githubusercontent.com/mrt0p0l/config-cloud/main/countries/DE.txt`
